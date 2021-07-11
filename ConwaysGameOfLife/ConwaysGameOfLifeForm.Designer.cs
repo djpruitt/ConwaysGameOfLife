@@ -1,4 +1,7 @@
 ﻿
+using System;
+using System.Windows.Forms;
+
 namespace ConwaysGameOfLife
 {
     partial class ConwaysGameOfLifeForm
@@ -39,10 +42,10 @@ namespace ConwaysGameOfLife
             this.Name = "Form1";
             this.Text = "Form1";
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.ConwaysGameOfLifeForm_Paint);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ConwaysGameOfLifeForm_OnClosing);
             this.ResumeLayout(false);
-
         }
-
+                
         #endregion
     }
 }

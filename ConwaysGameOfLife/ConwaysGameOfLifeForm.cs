@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -40,9 +41,11 @@ namespace ConwaysGameOfLife
         int numberOfCellsVertical = 20;
         int cellSize = 20;
         Random rand = new Random();
-
+        CancellationTokenSource tokenSource = new CancellationTokenSource();
+        CancellationToken token;
         public ConwaysGameOfLifeForm()
         {
+            this.token = tokenSource.Token;
             InitializeComponent();
             InitializeGrid();
         }
@@ -70,7 +73,7 @@ namespace ConwaysGameOfLife
 
         private void RandomizeInitialAliveCell(Cell newCell)
         {
-            if (this.rand.Next(1, 9) == 3)
+            if (this.rand.Next(1, 9) % 3 == 0)
             {
                 newCell.IsAlive = true;
             }
@@ -151,22 +154,41 @@ namespace ConwaysGameOfLife
             }
         }
 
+        private void ConwaysGameOfLifeForm_OnClosing(object sender, FormClosingEventArgs obj)
+        {
+            this.tokenSource.Cancel();
+        }
+
         private async void ConwaysGameOfLifeForm_Paint(object sender, PaintEventArgs e)
         {
-            await ProcessNextGenAsync();
+            this.Cursor = Cursors.WaitCursor;
+
+            try
+            {
+                await ProcessNextGenAsync(this.token);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
 
             MessageBox.Show("Game Over");
             this.Close();
         }
 
-        private async Task ProcessNextGenAsync()
+        private async Task ProcessNextGenAsync(CancellationToken cancellationToken)
         {
-            for(int i = 0; i < 50; i++)
-            {
-                DrawCells();
-                await Task.Delay(500);
-                ProcessNextGen();
-            }
+            await Task.Run( async () =>
+                    {
+                        for (int i = 0; i < 50; i++)
+                        {
+                            DrawCells();
+                            await Task.Delay(200);
+                            ProcessNextGen();
+                        }
+                    },
+                    cancellationToken
+            );
         }
     }
 }
